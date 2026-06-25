@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { neon } from "@neondatabase/serverless";
 
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+
+export const dynamic = "force-dynamic";
+
 async function getRuns() {
   const sql = neon(process.env.DATABASE_URL!);
   return await sql`SELECT * FROM tracking.runs ORDER BY date DESC LIMIT 30`;
@@ -20,6 +25,10 @@ type Run = {
 };
 
 export default async function RunsPage() {
+
+  const session = await getServerSession();
+  if (!session) redirect("/api/auth/signin");
+
   const runs = await getRuns();
 
   return (
@@ -43,7 +52,13 @@ export default async function RunsPage() {
             const pace = run.miles > 0 ? (run.minutes / run.miles).toFixed(2) : "—";
             const tags = (["treadmill", "race", "ioana", "stroller"] as const).filter((t) => run[t]);
             return (
-              <div key={run.id} className="rounded-xl bg-white dark:bg-zinc-900 px-5 py-4 shadow-sm ring-1 ring-zinc-100 dark:ring-zinc-800">
+              <div
+                key={run.id}
+                className={`rounded-xl px-5 py-4 shadow-sm ring-1 ${run.race
+                    ? "bg-amber-50 ring-amber-200 dark:bg-amber-950 dark:ring-amber-800"
+                    : "bg-white ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800"
+                  }`}
+              >
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">

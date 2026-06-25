@@ -2,8 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
 
 export default function AddRun() {
+  const session = getServerSession();
+  if (!session) redirect("/api/auth/signin");
+
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
