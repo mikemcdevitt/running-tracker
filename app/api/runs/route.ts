@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   const { date, miles, minutes, location, zip, shoes, treadmill, race, ioana, stroller } = body;
 
   await sql`
-    INSERT INTO runs (date, miles, minutes, location, zip, shoes, treadmill, race, ioana, stroller)
+    INSERT INTO tracking.runs (date, miles, minutes, location, zip, shoes, treadmill, race, ioana, stroller)
     VALUES (
       ${date}, ${parseFloat(miles)}, ${parseFloat(minutes)},
       ${location || null}, ${zip || null}, ${shoes},
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET() {
   const runs = await sql`
-    SELECT * FROM runs ORDER BY date DESC LIMIT 30
+    SELECT * FROM tracking.runs ORDER BY date DESC LIMIT 30
   `;
   return NextResponse.json(runs);
 }
