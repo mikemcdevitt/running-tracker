@@ -1,4 +1,10 @@
 import Link from "next/link";
+import { neon } from "@neondatabase/serverless";
+
+async function getRuns() {
+  const sql = neon(process.env.DATABASE_URL!);
+  return await sql`SELECT * FROM tracking.runs ORDER BY date DESC LIMIT 30`;
+}
 
 type Run = {
   id: number;
@@ -12,13 +18,6 @@ type Run = {
   ioana: boolean;
   stroller: boolean;
 };
-
-async function getRuns(): Promise<Run[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/runs`, {
-    cache: "no-store",
-  });
-  return res.json();
-}
 
 export default async function RunsPage() {
   const runs = await getRuns();
