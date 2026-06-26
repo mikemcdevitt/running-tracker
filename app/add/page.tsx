@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function AddRun() {
-  const session = getServerSession();
-  if (!session) redirect("/api/auth/signin");
-
+  const { data: session, status } = useSession();
   const router = useRouter();
+
+  useEffect(() => {
+    if (status === "unauthenticated") router.push("/api/auth/signin");
+  }, [status, router]);
+
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     date: new Date().toISOString().split("T")[0],
@@ -45,6 +47,9 @@ export default function AddRun() {
       setLoading(false);
     }
   }
+
+  if (status === "loading") return null;
+  if (!session) return null;
 
   const inputClass =
     "w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
