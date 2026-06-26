@@ -12,11 +12,15 @@ async function getStats() {
   const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
   const yearStart = `${now.getFullYear()}-01-01`;
 
-  const [monthly, yearly, overall, lastRun] = await Promise.all([
+  const [monthly, yearly, overall, lastRun, evMonthly, evYearly, evLastCharge, evAllTime] = await Promise.all([
     sql`SELECT COALESCE(SUM(miles), 0) AS total FROM tracking.runs WHERE date >= ${monthStart}`,
     sql`SELECT COALESCE(SUM(miles), 0) AS total FROM tracking.runs WHERE date >= ${yearStart}`,
     sql`SELECT COALESCE(SUM(miles), 0) AS total FROM tracking.runs`,
     sql`SELECT date, miles, minutes, location FROM tracking.runs ORDER BY date DESC LIMIT 1`,
+    sql`SELECT COALESCE(SUM(miles), 0) AS miles, COALESCE(SUM(kwh), 0) AS kwh FROM tracking.ev WHERE date >= ${monthStart}`,
+    sql`SELECT COALESCE(SUM(miles), 0) AS miles, COALESCE(SUM(kwh), 0) AS kwh FROM tracking.ev WHERE date >= ${yearStart}`,
+    sql`SELECT date, miles, kwh FROM tracking.ev ORDER BY date DESC LIMIT 1`,
+    sql`SELECT COALESCE(SUM(miles), 0) AS miles, COALESCE(SUM(kwh), 0) AS kwh FROM tracking.ev`,
   ]);
 
   return {
@@ -24,6 +28,16 @@ async function getStats() {
     yearly: parseFloat(yearly[0].total),
     overall: parseFloat(overall[0].total),
     lastRun: lastRun[0] ?? null,
+    ev: {
+      monthly: { miles: parseFloat(evMonthly[0].miles), kwh: parseFloat(evMonthly[0].kwh) },
+      yearly: { miles: parseFloat(evYearly[0].miles), kwh: parseFloat(evYearly[0].kwh) },
+      lastCharge: evLastCharge[0] ?? null,
+      allTime: { miles: parseFloat(evAllTime[0].miles), kwh: parseFloat(evAllTime[0].kwh) },
+    },
+    evAllTime: {
+      miles: parseFloat(evAllTime[0].miles),
+      kwh: parseFloat(evAllTime[0].kwh),
+    },
   };
 }
 
@@ -61,6 +75,30 @@ export default async function Home() {
         ? `${pace} min/mi · ${new Date(stats.lastRun.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}${stats.lastRun.location ? ` · ${stats.lastRun.location}` : ""}`
         : "no runs yet",
     },
+    {
+      label: "EV this month",
+      value: `${stats.ev.monthly.miles.toFixed(0)} mi`,
+      sub: `${stats.ev.monthly.kwh.toFixed(1)} kWh · ${stats.ev.monthly.kwh > 0 ? (stats.ev.monthly.miles / stats.ev.monthly.kwh).toFixed(2) : "—"} mi/kWh`,
+    },
+    {
+      label: "EV this year",
+      value: `${stats.ev.yearly.miles.toFixed(0)} mi`,
+      sub: `${stats.ev.yearly.kwh.toFixed(1)} kWh · ${stats.ev.yearly.kwh > 0 ? (stats.ev.yearly.miles / stats.ev.yearly.kwh).toFixed(2) : "—"} mi/kWh`,
+    },
+    {
+      label: "Last charge",
+      value: stats.ev.lastCharge ? `${parseFloat(stats.ev.lastCharge.miles).toFixed(0)} mi` : "—",
+      sub: stats.ev.lastCharge
+        ? `${parseFloat(stats.ev.lastCharge.kwh).toFixed(1)} kWh · ${new Date(stats.ev.lastCharge.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}`
+        : "no charges yet",
+    },
+    {
+      label: "EV efficiency",
+      value: stats.ev.allTime.kwh > 0
+        ? `${((stats.ev.allTime.kwh / stats.ev.allTime.miles) * 1000).toFixed(0)} Wh/mi`
+        : "—",
+      sub: `across ${stats.ev.allTime.miles.toFixed(0)} mi`,
+    },
   ];
 
   return (
@@ -71,9 +109,9 @@ export default async function Home() {
           <div>
             <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Running Tracker</h1>
             <p className="mt-1 text-sm text-zinc-500">Welcome back, {session.user?.name?.split(" ")[0]}.</p>
-<a href="/api/auth/signout" className="text-sm text-zinc-400 hover:text-zinc-600">
-  Sign out
-</a>
+            <a href="/api/auth/signout" className="text-sm text-zinc-400 hover:text-zinc-600">
+              Sign out
+            </a>
           </div>
           <div className="flex gap-3">
             <Link href="/runs" className="rounded-full border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900">
@@ -81,6 +119,9 @@ export default async function Home() {
             </Link>
             <Link href="/add" className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900">
               + Log run
+            </Link>
+            <Link href="/ev" className="rounded-full border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900">
+              EV log
             </Link>
           </div>
         </div>
