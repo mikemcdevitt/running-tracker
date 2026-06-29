@@ -14,6 +14,12 @@ type EvEntry = {
   total_kwh: number | null;
 };
 
+const cardClass = {
+  efficient: "rounded-xl px-5 py-4 shadow-sm ring-1 transition-all cursor-pointer bg-emerald-50 ring-emerald-200 dark:bg-emerald-950 dark:ring-emerald-800",
+  inefficient: "rounded-xl px-5 py-4 shadow-sm ring-1 transition-all cursor-pointer bg-rose-50 ring-rose-200 dark:bg-rose-950 dark:ring-rose-800",
+  normal: "rounded-xl px-5 py-4 shadow-sm ring-1 transition-all cursor-pointer bg-white ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800",
+};
+
 async function getEntries(): Promise<EvEntry[]> {
   const sql = neon(process.env.DATABASE_URL!);
   return await sql`SELECT * FROM tracking.ev ORDER BY date DESC` as EvEntry[];
@@ -77,14 +83,10 @@ export default async function EvPage() {
           {(entries as EvEntry[]).map((entry) => {
             const t = tag(entry);
             const whPerMile = getEfficiency(entry);
+
             return (
               <Link key={entry.id} href={`/ev/${entry.id}`} className="block">
-                <div className={`rounded-xl px-5 py-4 shadow-sm ring-1 transition-all cursor-pointer ${t === "efficient"
-                    ? "bg-emerald-50 ring-emerald-200 dark:bg-emerald-950 dark:ring-emerald-800"
-                    : t === "inefficient"
-                      ? "bg-rose-50 ring-rose-200 dark:bg-rose-950 dark:ring-rose-800"
-                      : "bg-white ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800"
-                  }`}>
+                <div className={cardClass[t]}>
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">

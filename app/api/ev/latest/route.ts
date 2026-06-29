@@ -13,7 +13,6 @@ export async function GET() {
   const latest = result[0];
   const defaultDate = new Date().toISOString().split("T")[0]; // Default to today
 
-
   return NextResponse.json({
     date: defaultDate,
     odo: latest ? parseFloat(latest.odo) : 0,
