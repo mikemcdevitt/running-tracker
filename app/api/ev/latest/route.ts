@@ -11,15 +11,8 @@ export async function GET() {
   `;
 
   const latest = result[0];
-  let defaultDate: string;
+  const defaultDate = new Date().toISOString().split("T")[0]; // Default to today
 
-  if (latest) {
-    const next = new Date(latest.date);
-    next.setUTCDate(next.getUTCDate() + 1);
-    defaultDate = next.toISOString().split("T")[0];
-  } else {
-    defaultDate = new Date().toISOString().split("T")[0];
-  }
 
   return NextResponse.json({
     date: defaultDate,

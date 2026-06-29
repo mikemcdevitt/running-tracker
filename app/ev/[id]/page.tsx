@@ -76,8 +76,8 @@ export default function EvDetail() {
   const totalHours = totalMinutes / 60;
 
   const avgSpeed = totalHours > 0 ? (miles / totalHours).toFixed(1) : null;
-  const miPer100Wh = kwh > 0 ? (miles / (kwh * 100)).toFixed(3) : null;
-  const whPerMile = miles > 0 ? ((kwh * 1000) / miles).toFixed(0) : null;
+  const miPer100Wh = kwh > 0 ? (miles / (kwh / 10)).toFixed(1) : null;
+  const kwhPer100Mile = miles > 0 ? ((kwh) / (miles / 100)).toFixed(1) : null;
 
   async function handleSave() {
     setSaving(true);
@@ -121,11 +121,11 @@ export default function EvDetail() {
                 <p className="text-xs text-zinc-400">mph</p>
               </div>
             )}
-            {whPerMile && (
+            {kwhPer100Mile && (
               <div className="rounded-xl bg-white dark:bg-zinc-900 px-4 py-3 shadow-sm ring-1 ring-zinc-100 dark:ring-zinc-800 text-center">
                 <p className="text-xs text-zinc-400 uppercase tracking-wide">Efficiency</p>
-                <p className="mt-1 text-xl font-semibold text-zinc-900 dark:text-zinc-50">{whPerMile}</p>
-                <p className="text-xs text-zinc-400">Wh/mi</p>
+                <p className="mt-1 text-xl font-semibold text-zinc-900 dark:text-zinc-50">{kwhPer100Mile}</p>
+                <p className="text-xs text-zinc-400">kWh/100mi</p>
               </div>
             )}
             {miPer100Wh && (
