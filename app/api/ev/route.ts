@@ -5,13 +5,13 @@ const sql = neon(process.env.DATABASE_URL!);
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { date, miles, kwh, odo, total_kwh } = body;
+  const { date, miles, kwh, odo, total_kwh, minutes } = body;
 
   await sql`
-    INSERT INTO tracking.ev (date, miles, kwh, odo, total_kwh)
+    INSERT INTO tracking.ev (date, miles, kwh, odo, total_kwh, minutes)
     VALUES (
       ${date}, ${parseFloat(miles)}, ${parseFloat(kwh)},
-      ${odo ? parseFloat(odo) : null}, ${total_kwh ? parseFloat(total_kwh) : null}
+      ${odo ? parseFloat(odo) : null}, ${total_kwh ? parseFloat(total_kwh) : null}, ${minutes ? parseFloat(minutes) : null}
     )
   `;
 

@@ -57,14 +57,14 @@ export default function AddRun() {
   const labelClass = "block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1";
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black px-4 py-12">
+    <div className="min-h-screen bg-zinc-50 dark:bg-black px-0 py-0 sm:px-4 sm:py-12">
       <div className="mx-auto max-w-lg">
         <div className="mb-8">
           <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Log a run</h1>
           <p className="mt-1 text-sm text-zinc-500">Add a new entry to your running log.</p>
         </div>
 
-        <div className="space-y-5 rounded-2xl bg-white dark:bg-zinc-900 p-6 shadow-sm ring-1 ring-zinc-100 dark:ring-zinc-800">
+        <div className="space-y-5 rounded-none sm:rounded-2xl bg-white dark:bg-zinc-900 p-5 sm:p-6 shadow-sm sm:ring-1 ring-zinc-100 dark:ring-zinc-800">
 
           {/* Date / Miles / Minutes */}
           <div className="grid grid-cols-3 gap-4">
@@ -115,11 +115,10 @@ export default function AddRun() {
                   key={field}
                   type="button"
                   onClick={() => set(field, !form[field])}
-                  className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
-                    form[field]
+                  className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${form[field]
                       ? "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
                       : "border-zinc-200 bg-white text-zinc-500 hover:border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
-                  }`}
+                    }`}
                 >
                   <span className={`h-2 w-2 rounded-full ${form[field] ? "bg-white dark:bg-zinc-900" : "bg-zinc-300 dark:bg-zinc-600"}`} />
                   {field.charAt(0).toUpperCase() + field.slice(1)}
