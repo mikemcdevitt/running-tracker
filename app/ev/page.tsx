@@ -49,7 +49,8 @@ export default async function EvPage() {
               ? (entry.miles / entry.kwh).toFixed(2)
               : null;
             return (
-              <div key={entry.id} className="rounded-xl bg-white dark:bg-zinc-900 px-5 py-4 shadow-sm ring-1 ring-zinc-100 dark:ring-zinc-800">
+              <Link key={entry.id} href={`/ev/${entry.id}`} className="block">
+              <div className="rounded-xl bg-white dark:bg-zinc-900 px-5 py-4 shadow-sm ring-1 ring-zinc-100 dark:ring-zinc-800">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
@@ -74,6 +75,7 @@ export default async function EvPage() {
                   )}
                 </div>
               </div>
+            </Link>
             );
           })}
         </div>
