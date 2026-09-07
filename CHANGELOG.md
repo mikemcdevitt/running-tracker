@@ -7,6 +7,7 @@ All notable changes to this project are documented here. Format loosely follows 
 ### Security
 
 - Require an authenticated session on every `/api` route (`runs`, `ev`, `ev/[id]`, `ev/latest`). Previously these endpoints had no session check, so anyone who found the URL could read or write rows regardless of login state. Shared NextAuth config extracted into `lib/auth.ts` so route handlers and the sign-in route use the same `authOptions`.
+- Restrict sign-in to a single allow-listed Google account via a `signIn` callback and the new `ALLOWED_EMAIL` env var. Being logged into Google is no longer enough on its own — the account has to match `ALLOWED_EMAIL`, and sign-in fails closed (denies everyone) if it isn't configured.
 
 ## 2026-06-29
 

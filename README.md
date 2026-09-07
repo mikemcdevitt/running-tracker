@@ -36,6 +36,7 @@ Open [http://localhost:3000](http://localhost:3000). You'll be redirected to Goo
 | `GOOGLE_CLIENT_SECRET` | OAuth client secret for the same credential. |
 | `NEXTAUTH_SECRET` | Random string NextAuth uses to sign session tokens/cookies. Generate one with `openssl rand -base64 32`. |
 | `NEXTAUTH_URL` | The app's base URL (e.g. `http://localhost:3000` locally, your Vercel URL in production). Required by NextAuth v4 outside of local dev. |
+| `ALLOWED_EMAIL` | The only Google account allowed to sign in (case-insensitive). Sign-in is denied for everyone if this isn't set. |
 
 See `.env.example` for a ready-to-copy template.
 
@@ -73,7 +74,7 @@ CREATE TABLE tracking.ev (
 
 ## Security
 
-Every page and every route under `app/api/` (runs, ev, ev/[id], ev/latest) checks for a valid NextAuth session server-side and returns a redirect (pages) or `401` (API routes) when there isn't one — see `lib/auth.ts` for the shared auth config. There's currently no allow-list of Google accounts, so any Google account that reaches `/api/auth/signin` can sign in and read/write your data; if you deploy this somewhere others can discover, consider restricting sign-in to a specific email or Google Workspace domain via a `signIn` callback in `lib/auth.ts`.
+Every page and every route under `app/api/` (runs, ev, ev/[id], ev/latest) checks for a valid NextAuth session server-side and returns a redirect (pages) or `401` (API routes) when there isn't one — see `lib/auth.ts` for the shared auth config. On top of that, `lib/auth.ts`'s `signIn` callback only allows the single Google account in `ALLOWED_EMAIL` to sign in at all, and fails closed (denies everyone) if that variable isn't set — so anyone else who authenticates with Google still can't get in.
 
 ## Deployment
 
