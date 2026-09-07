@@ -1,7 +1,14 @@
 import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const sql = neon(process.env.DATABASE_URL!);
   const result = await sql`
     SELECT date, odo, total_kwh 
