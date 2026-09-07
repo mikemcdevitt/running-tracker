@@ -19,6 +19,8 @@ export default function EvDetail() {
   const router = useRouter();
   const { id } = useParams();
 
+  const editable = session?.user?.role === "editor";
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -38,11 +40,9 @@ export default function EvDetail() {
   useEffect(() => {
     async function fetchEntry() {
       const res = await fetch(`/api/ev/${id}`);
-      console.log("fetchEntry status:", res.status);
-      if (!res.ok) { 
-        console.log("fetchEntry failed, redirecting to /ev");
-        router.push("/ev"); 
-        return; 
+      if (!res.ok) {
+        router.push("/ev");
+        return;
       }
       const entry: EvEntry = await res.json();
 
@@ -64,8 +64,10 @@ export default function EvDetail() {
     if (status === "authenticated") fetchEntry();
   }, [status, id]);
 
-  const set = (field: string, value: string) =>
+  const set = (field: string, value: string) => {
+    if (!editable) return;
     setForm((f) => ({ ...f, [field]: value }));
+  };
 
   // Derived stats
   const miles = parseFloat(form.miles) || 0;
@@ -80,6 +82,7 @@ export default function EvDetail() {
   const kwhPer100Mile = miles > 0 ? ((kwh) / (miles / 100)).toFixed(1) : null;
 
   async function handleSave() {
+    if (!editable) return;
     setSaving(true);
     const totalMins = hours * 60 + mins || null;
     const res = await fetch(`/api/ev/${id}`, {
@@ -99,7 +102,7 @@ export default function EvDetail() {
   if (!session) return null;
 
   const inputClass =
-    "w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
+    "w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
   const labelClass = "block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1";
 
   return (
@@ -108,7 +111,7 @@ export default function EvDetail() {
 
         <div className="mb-8 px-5 pt-10 sm:px-0 sm:pt-0">
           <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Charge detail</h1>
-          <p className="mt-1 text-sm text-zinc-500">Edit or review this entry.</p>
+          <p className="mt-1 text-sm text-zinc-500">{editable ? "Edit or review this entry." : "View-only."}</p>
         </div>
 
         {/* Calculated stats */}
@@ -144,17 +147,17 @@ export default function EvDetail() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className={labelClass}>Date</label>
-              <input type="date" className={inputClass} value={form.date}
+              <input type="date" className={inputClass} value={form.date} disabled={!editable}
                 onChange={(e) => set("date", e.target.value)} />
             </div>
             <div>
               <label className={labelClass}>Miles</label>
-              <input type="number" step="0.1" className={inputClass}
+              <input type="number" step="0.1" className={inputClass} disabled={!editable}
                 value={form.miles} onChange={(e) => set("miles", e.target.value)} />
             </div>
             <div>
               <label className={labelClass}>kWh</label>
-              <input type="number" step="0.1" className={inputClass}
+              <input type="number" step="0.1" className={inputClass} disabled={!editable}
                 value={form.kwh} onChange={(e) => set("kwh", e.target.value)} />
             </div>
           </div>
@@ -163,12 +166,12 @@ export default function EvDetail() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Hours driven</label>
-              <input type="number" step="1" min="0" placeholder="2" className={inputClass}
+              <input type="number" step="1" min="0" placeholder="2" className={inputClass} disabled={!editable}
                 value={form.hours} onChange={(e) => set("hours", e.target.value)} />
             </div>
             <div>
               <label className={labelClass}>Minutes driven</label>
-              <input type="number" step="1" min="0" max="59" placeholder="30" className={inputClass}
+              <input type="number" step="1" min="0" max="59" placeholder="30" className={inputClass} disabled={!editable}
                 value={form.mins} onChange={(e) => set("mins", e.target.value)} />
             </div>
           </div>
@@ -177,23 +180,25 @@ export default function EvDetail() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Odometer</label>
-              <input type="number" step="0.1" className={inputClass}
+              <input type="number" step="0.1" className={inputClass} disabled={!editable}
                 value={form.odo} onChange={(e) => set("odo", e.target.value)} />
             </div>
             <div>
               <label className={labelClass}>Total kWh</label>
-              <input type="number" step="0.1" className={inputClass}
+              <input type="number" step="0.1" className={inputClass} disabled={!editable}
                 value={form.total_kwh} onChange={(e) => set("total_kwh", e.target.value)} />
             </div>
           </div>
 
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="w-full rounded-full bg-zinc-900 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-          >
-            {saving ? "Saving…" : "Save changes"}
-          </button>
+          {editable && (
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full rounded-full bg-zinc-900 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+            >
+              {saving ? "Saving…" : "Save changes"}
+            </button>
+          )}
         </div>
 
         <div className="mt-4 text-center px-5 sm:px-0">

@@ -7,7 +7,7 @@ A personal Next.js app for logging runs and EV charging sessions, with a dashboa
 - **Dashboard** — monthly, yearly, and all-time mileage for both running and the EV, plus last-run and last-charge summaries and overall EV efficiency (Wh/mi).
 - **Run log** — record date, distance, time, location, zip, shoes, and tags (treadmill, race, ioana, stroller); recent entries list with pace calculated per run.
 - **EV log** — record date, miles, kWh, odometer, running total kWh, and time driven; entries are flagged **efficient**/**inefficient** when their Wh/mi is more than one standard deviation from your average, and each entry has a detail page for edits with derived stats (avg speed, kWh/100mi, mi/100Wh).
-- **Auth** — every page and API route requires a signed-in Google account (NextAuth). There's no public read/write access — see [Security](#security) below.
+- **Auth with roles** — every page and API route requires a signed-in, allow-listed Google account (NextAuth). Accounts in `ALLOWED_EMAILS` can read and write; accounts in `READONLY_EMAILS` can view everything but can't create, edit, or delete anything — see [Security](#security) below.
 
 ## Tech stack
 
@@ -36,7 +36,8 @@ Open [http://localhost:3000](http://localhost:3000). You'll be redirected to Goo
 | `GOOGLE_CLIENT_SECRET` | OAuth client secret for the same credential. |
 | `NEXTAUTH_SECRET` | Random string NextAuth uses to sign session tokens/cookies. Generate one with `openssl rand -base64 32`. |
 | `NEXTAUTH_URL` | The app's base URL (e.g. `http://localhost:3000` locally, your Vercel URL in production). Required by NextAuth v4 outside of local dev. |
-| `ALLOWED_EMAIL` | The only Google account allowed to sign in (case-insensitive). Sign-in is denied for everyone if this isn't set. |
+| `ALLOWED_EMAILS` | Comma-separated Google accounts with full read/write access (case-insensitive). |
+| `READONLY_EMAILS` | Comma-separated Google accounts with read-only access — they can sign in and view everything but can't create, edit, or delete anything. |
 
 See `.env.example` for a ready-to-copy template.
 
@@ -74,7 +75,12 @@ CREATE TABLE tracking.ev (
 
 ## Security
 
-Every page and every route under `app/api/` (runs, ev, ev/[id], ev/latest) checks for a valid NextAuth session server-side and returns a redirect (pages) or `401` (API routes) when there isn't one — see `lib/auth.ts` for the shared auth config. On top of that, `lib/auth.ts`'s `signIn` callback only allows the single Google account in `ALLOWED_EMAIL` to sign in at all, and fails closed (denies everyone) if that variable isn't set — so anyone else who authenticates with Google still can't get in.
+Every page and every route under `app/api/` (runs, ev, ev/[id], ev/latest) checks for a valid NextAuth session server-side and returns a redirect (pages) or `401` (API routes) when there isn't one — see `lib/auth.ts` for the shared auth config.
+
+On top of that, `lib/auth.ts`'s `signIn` callback only allows accounts listed in `ALLOWED_EMAILS` or `READONLY_EMAILS` to sign in at all, and fails closed (denies everyone) if neither variable is set. Signed-in accounts get one of two roles, carried in `session.user.role` via the `jwt`/`session` callbacks:
+
+- **`editor`** (`ALLOWED_EMAILS`) — full read/write access.
+- **`viewer`** (`READONLY_EMAILS`) — can view the dashboard, runs, and EV log, but the "+ Log run" / "+ Log charge" actions are hidden, the add/edit pages redirect away or render disabled, and the mutating API routes (`POST /api/runs`, `POST /api/ev`, `PATCH /api/ev/[id]`) return `403` regardless of what the UI shows. The UI hiding is for convenience — the API-level check is what actually enforces it.
 
 ## Deployment
 

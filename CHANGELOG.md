@@ -7,7 +7,8 @@ All notable changes to this project are documented here. Format loosely follows 
 ### Security
 
 - Require an authenticated session on every `/api` route (`runs`, `ev`, `ev/[id]`, `ev/latest`). Previously these endpoints had no session check, so anyone who found the URL could read or write rows regardless of login state. Shared NextAuth config extracted into `lib/auth.ts` so route handlers and the sign-in route use the same `authOptions`.
-- Restrict sign-in to a single allow-listed Google account via a `signIn` callback and the new `ALLOWED_EMAIL` env var. Being logged into Google is no longer enough on its own — the account has to match `ALLOWED_EMAIL`, and sign-in fails closed (denies everyone) if it isn't configured.
+- Restrict sign-in to allow-listed Google accounts via a `signIn` callback. Being logged into Google is no longer enough on its own, and sign-in fails closed (denies everyone) if no allow-list is configured.
+- Add a `viewer` role: accounts in the new `READONLY_EMAILS` env var (comma-separated, alongside `ALLOWED_EMAILS` for full-access `editor` accounts) can sign in and view everything, but the mutating API routes (`POST /api/runs`, `POST /api/ev`, `PATCH /api/ev/[id]`) return `403` for them regardless of the UI, and the add/edit UI is hidden or disabled accordingly. `ALLOWED_EMAIL` (singular) is replaced by `ALLOWED_EMAILS` (comma-separated).
 
 ## 2026-06-29
 

@@ -3,6 +3,7 @@ import { neon } from "@neondatabase/serverless";
 
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
+import { authOptions, canEdit } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -26,8 +27,9 @@ type Run = {
 
 export default async function RunsPage() {
 
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   if (!session) redirect("/api/auth/signin");
+  const editable = canEdit(session.user?.role);
 
   const runs = await getRuns();
 
@@ -39,12 +41,14 @@ export default async function RunsPage() {
             <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Recent runs</h1>
             <p className="mt-1 text-sm text-zinc-500">Last 30 entries</p>
           </div>
-          <Link
-            href="/add"
-            className="rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-          >
-            + Log run
-          </Link>
+          {editable && (
+            <Link
+              href="/add"
+              className="rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+            >
+              + Log run
+            </Link>
+          )}
         </div>
 
         <div className="space-y-3">

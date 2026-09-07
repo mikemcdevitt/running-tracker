@@ -7,5 +7,6 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # Running Tracker — agent notes
 
 - Every route under `app/api/**` and every page must require a signed-in session (`getServerSession(authOptions)` from `lib/auth.ts` in routes; redirect-to-signin in pages). See `CLAUDE.md` for the full convention and why it's non-negotiable here.
+- There are two roles: `editor` (read/write) and `viewer` (read-only). Any mutating route must also check `canEdit(session.user?.role)` and return `403` for viewers — don't rely on the UI hiding the button.
 - Data lives in Neon Postgres under a `tracking` schema (`tracking.runs`, `tracking.ev`); schema and required env vars are documented in `README.md` and `.env.example`.
 - When behavior changes, update `README.md` / `CHANGELOG.md` / `.env.example` alongside the code — see `CLAUDE.md#keeping-docs-current`.

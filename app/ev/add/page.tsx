@@ -11,7 +11,8 @@ export default function AddEv() {
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/api/auth/signin");
-  }, [status, router]);
+    else if (status === "authenticated" && session?.user?.role !== "editor") router.push("/ev");
+  }, [status, session, router]);
 
   const [loading, setLoading] = useState(false);
   const [baselines, setBaselines] = useState({ odo: 0, total_kwh: 0 });
@@ -24,10 +25,6 @@ export default function AddEv() {
     hours: "",
     mins: "",
   });
-
-  useEffect(() => {
-    if (status === "unauthenticated") router.push("/api/auth/signin");
-  }, [status, router]);
 
   useEffect(() => {
     async function fetchDefaults() {
@@ -80,7 +77,7 @@ export default function AddEv() {
   }
 
   if (status === "loading") return null;
-  if (!session) return null;
+  if (!session || session.user?.role !== "editor") return null;
 
   const inputClass =
     "w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";

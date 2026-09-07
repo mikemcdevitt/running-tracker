@@ -10,7 +10,8 @@ export default function AddRun() {
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/api/auth/signin");
-  }, [status, router]);
+    else if (status === "authenticated" && session.user?.role !== "editor") router.push("/runs");
+  }, [status, session, router]);
 
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
@@ -49,7 +50,7 @@ export default function AddRun() {
   }
 
   if (status === "loading") return null;
-  if (!session) return null;
+  if (!session || session.user?.role !== "editor") return null;
 
   const inputClass =
     "w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";

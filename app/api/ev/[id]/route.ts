@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { authOptions, canEdit } from "@/lib/auth";
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -21,6 +21,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (!canEdit(session.user?.role)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const { id } = await params;

@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
 import Link from "next/link";
+import { authOptions, canEdit } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -42,8 +43,9 @@ async function getStats() {
 }
 
 export default async function Home() {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   if (!session) redirect("/api/auth/signin");
+  const editable = canEdit(session.user?.role);
 
   const stats = await getStats();
 
@@ -117,9 +119,11 @@ export default async function Home() {
             <Link href="/runs" className="rounded-full border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900">
               All runs
             </Link>
-            <Link href="/add" className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900">
-              + Log run
-            </Link>
+            {editable && (
+              <Link href="/add" className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900">
+                + Log run
+              </Link>
+            )}
             <Link href="/ev" className="rounded-full border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900">
               EV log
             </Link>

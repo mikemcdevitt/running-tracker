@@ -2,6 +2,7 @@ import { neon } from "@neondatabase/serverless";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { authOptions, canEdit } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -26,8 +27,9 @@ async function getEntries(): Promise<EvEntry[]> {
 }
 
 export default async function EvPage() {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   if (!session) redirect("/api/auth/signin");
+  const editable = canEdit(session.user?.role);
 
   const sql = neon(process.env.DATABASE_URL!);
 
@@ -73,9 +75,11 @@ export default async function EvPage() {
             <Link href="/" className="rounded-full border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900">
               Home
             </Link>
-            <Link href="/ev/add" className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900">
-              + Log charge
-            </Link>
+            {editable && (
+              <Link href="/ev/add" className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900">
+                + Log charge
+              </Link>
+            )}
           </div>
         </div>
 
