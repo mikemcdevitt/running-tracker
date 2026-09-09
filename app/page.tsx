@@ -56,7 +56,7 @@ export default async function Home() {
       ? (stats.lastRun.minutes / stats.lastRun.miles).toFixed(2)
       : null;
 
-  const cards = [
+  const runCards = [
     {
       label: "This month",
       value: `${stats.monthly.toFixed(1)} mi`,
@@ -79,6 +79,9 @@ export default async function Home() {
         ? `${pace} min/mi · ${formatDate(stats.lastRun.date)}${stats.lastRun.location ? ` · ${stats.lastRun.location}` : ""}`
         : "no runs yet",
     },
+  ];
+
+  const evCards = [
     {
       label: "EV this month",
       value: `${stats.ev.monthly.miles.toFixed(0)} mi`,
@@ -118,20 +121,43 @@ export default async function Home() {
             </a>
           </>
         }
-        actions={
-          <>
-            <PillLink href="/runs">All runs</PillLink>
-            {editable && <PillLink href="/runs/add" variant="solid">+ Log run</PillLink>}
-            <PillLink href="/ev">EV log</PillLink>
-          </>
-        }
       />
 
-      <div className="grid grid-cols-2 gap-4">
-        {cards.map((card) => (
-          <StatCard key={card.label} label={card.label} value={card.value} sub={card.sub} />
-        ))}
-      </div>
+      <section>
+        <PageHeader
+          className="mb-4"
+          title="Running"
+          actions={
+            <>
+              <PillLink href="/runs">All runs</PillLink>
+              {editable && <PillLink href="/runs/add" variant="solid">+ Add Run</PillLink>}
+            </>
+          }
+        />
+        <div className="grid grid-cols-2 gap-4">
+          {runCards.map((card) => (
+            <StatCard key={card.label} label={card.label} value={card.value} sub={card.sub} />
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-10">
+        <PageHeader
+          className="mb-4"
+          title="EV"
+          actions={
+            <>
+              <PillLink href="/ev">All charges</PillLink>
+              {editable && <PillLink href="/ev/add" variant="solid">+ Add Charge</PillLink>}
+            </>
+          }
+        />
+        <div className="grid grid-cols-2 gap-4">
+          {evCards.map((card) => (
+            <StatCard key={card.label} label={card.label} value={card.value} sub={card.sub} />
+          ))}
+        </div>
+      </section>
     </PageShell>
   );
 }
