@@ -1,8 +1,10 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { neon } from "@neondatabase/serverless";
-import Link from "next/link";
 import { authOptions, canEdit } from "@/lib/auth";
+import { PageShell, PageHeader, PillLink } from "@/components/layout";
+import { StatCard } from "@/components/cards";
+import { formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -74,7 +76,7 @@ export default async function Home() {
       label: "Last run",
       value: stats.lastRun ? `${parseFloat(stats.lastRun.miles).toFixed(1)} mi` : "—",
       sub: stats.lastRun
-        ? `${pace} min/mi · ${new Date(stats.lastRun.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}${stats.lastRun.location ? ` · ${stats.lastRun.location}` : ""}`
+        ? `${pace} min/mi · ${formatDate(stats.lastRun.date)}${stats.lastRun.location ? ` · ${stats.lastRun.location}` : ""}`
         : "no runs yet",
     },
     {
@@ -91,7 +93,7 @@ export default async function Home() {
       label: "Last charge",
       value: stats.ev.lastCharge ? `${parseFloat(stats.ev.lastCharge.miles).toFixed(0)} mi` : "—",
       sub: stats.ev.lastCharge
-        ? `${parseFloat(stats.ev.lastCharge.kwh).toFixed(1)} kWh · ${new Date(stats.ev.lastCharge.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}`
+        ? `${parseFloat(stats.ev.lastCharge.kwh).toFixed(1)} kWh · ${formatDate(stats.ev.lastCharge.date)}`
         : "no charges yet",
     },
     {
@@ -104,43 +106,32 @@ export default async function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black px-4 py-12">
-      <div className="mx-auto max-w-2xl">
-
-        <div className="mb-10 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Running Tracker</h1>
+    <PageShell>
+      <PageHeader
+        className="mb-10"
+        title="Running Tracker"
+        subtitle={
+          <>
             <p className="mt-1 text-sm text-zinc-500">Welcome back, {session.user?.name?.split(" ")[0]}.</p>
             <a href="/api/auth/signout" className="text-sm text-zinc-400 hover:text-zinc-600">
               Sign out
             </a>
-          </div>
-          <div className="flex gap-3">
-            <Link href="/runs" className="rounded-full border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900">
-              All runs
-            </Link>
-            {editable && (
-              <Link href="/add" className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900">
-                + Log run
-              </Link>
-            )}
-            <Link href="/ev" className="rounded-full border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900">
-              EV log
-            </Link>
-          </div>
-        </div>
+          </>
+        }
+        actions={
+          <>
+            <PillLink href="/runs">All runs</PillLink>
+            {editable && <PillLink href="/runs/add" variant="solid">+ Log run</PillLink>}
+            <PillLink href="/ev">EV log</PillLink>
+          </>
+        }
+      />
 
-        <div className="grid grid-cols-2 gap-4">
-          {cards.map((card) => (
-            <div key={card.label} className="rounded-2xl bg-white dark:bg-zinc-900 px-6 py-5 shadow-sm ring-1 ring-zinc-100 dark:ring-zinc-800">
-              <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">{card.label}</p>
-              <p className="mt-2 text-3xl font-semibold text-zinc-900 dark:text-zinc-50">{card.value}</p>
-              <p className="mt-1 text-xs text-zinc-400">{card.sub}</p>
-            </div>
-          ))}
-        </div>
-
+      <div className="grid grid-cols-2 gap-4">
+        {cards.map((card) => (
+          <StatCard key={card.label} label={card.label} value={card.value} sub={card.sub} />
+        ))}
       </div>
-    </div>
+    </PageShell>
   );
 }

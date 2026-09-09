@@ -2,7 +2,17 @@
 
 All notable changes to this project are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased] — 2026-09-07
+## [Unreleased] — 2026-09-09
+
+### Added
+
+- Run detail page (`/runs/[id]`) for reviewing and editing a single run, with pace shown as a derived stat — brings runs to parity with the existing EV detail page. Backed by a new `GET`/`PATCH /api/runs/[id]` route.
+
+### Changed
+
+- Reorganized routes so running lives under `/runs/` at the same level as `/ev/`: the add-run form moved from `/add` to `/runs/add`, and the runs list now links each entry to its detail page (matching `/ev` → `/ev/[id]`).
+- Extracted the markup and logic shared by the runs and EV features — page header/nav, entry and stat cards, form fields, date formatting, and the client-side auth-guard checks — into `components/` (`layout.tsx`, `cards.tsx`, `form.tsx`) and `lib/` (`ui.ts`, `format.ts`, `hooks.ts`), so both features build on the same primitives instead of duplicating them. See `README.md#project-structure`.
+- Removed a dead `getEntries` helper and leftover debug `console.log` calls from `app/ev/page.tsx` while touching that file.
 
 ### Security
 

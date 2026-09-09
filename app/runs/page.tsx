@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { neon } from "@neondatabase/serverless";
-
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions, canEdit } from "@/lib/auth";
+import { PageShell, PageHeader, PillLink } from "@/components/layout";
+import { EntryCard } from "@/components/cards";
+import { formatDate, FULL_DATE } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +28,6 @@ type Run = {
 };
 
 export default async function RunsPage() {
-
   const session = await getServerSession(authOptions);
   if (!session) redirect("/api/auth/signin");
   const editable = canEdit(session.user?.role);
@@ -34,39 +35,24 @@ export default async function RunsPage() {
   const runs = await getRuns();
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black px-4 py-12">
-      <div className="mx-auto max-w-2xl">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Recent runs</h1>
-            <p className="mt-1 text-sm text-zinc-500">Last 30 entries</p>
-          </div>
-          {editable && (
-            <Link
-              href="/add"
-              className="rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-            >
-              + Log run
-            </Link>
-          )}
-        </div>
+    <PageShell>
+      <PageHeader
+        title="Recent runs"
+        subtitle={<p className="mt-1 text-sm text-zinc-500">Last 30 entries</p>}
+        actions={editable ? <PillLink href="/runs/add" variant="solid">+ Log run</PillLink> : undefined}
+      />
 
-        <div className="space-y-3">
-          {runs.map((run) => {
-            const pace = run.miles > 0 ? (run.minutes / run.miles).toFixed(2) : "—";
-            const tags = (["treadmill", "race", "ioana", "stroller"] as const).filter((t) => run[t]);
-            return (
-              <div
-                key={run.id}
-                className={`rounded-xl px-5 py-4 shadow-sm ring-1 ${run.race
-                    ? "bg-amber-50 ring-amber-200 dark:bg-amber-950 dark:ring-amber-800"
-                    : "bg-white ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800"
-                  }`}
-              >
+      <div className="space-y-3">
+        {runs.map((run) => {
+          const pace = run.miles > 0 ? (run.minutes / run.miles).toFixed(2) : "—";
+          const tags = (["treadmill", "race", "ioana", "stroller"] as const).filter((t) => run[t]);
+          return (
+            <Link key={run.id} href={`/runs/${run.id}`} className="block">
+              <EntryCard tone={run.race ? "amber" : "default"}>
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                      {new Date(run.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}
+                      {formatDate(run.date, FULL_DATE)}
                     </p>
                     <p className="mt-0.5 text-sm text-zinc-500">{run.location || "—"}</p>
                   </div>
@@ -90,11 +76,11 @@ export default async function RunsPage() {
                     </>
                   )}
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              </EntryCard>
+            </Link>
+          );
+        })}
       </div>
-    </div>
+    </PageShell>
   );
 }

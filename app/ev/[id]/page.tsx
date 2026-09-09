@@ -1,8 +1,11 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useRequireSession } from "@/lib/hooks";
+import { PageShell, BackLink } from "@/components/layout";
+import { FormCard, FormField, SubmitButton } from "@/components/form";
+import { DerivedStat } from "@/components/cards";
 
 type EvEntry = {
   id: number;
@@ -15,11 +18,9 @@ type EvEntry = {
 };
 
 export default function EvDetail() {
-  const { data: session, status } = useSession();
+  const { session, status, editable } = useRequireSession();
   const router = useRouter();
   const { id } = useParams();
-
-  const editable = session?.user?.role === "editor";
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -32,10 +33,6 @@ export default function EvDetail() {
     hours: "",
     mins: "",
   });
-
-  useEffect(() => {
-    if (status === "unauthenticated") router.push("/api/auth/signin");
-  }, [status, router]);
 
   useEffect(() => {
     async function fetchEntry() {
@@ -101,110 +98,44 @@ export default function EvDetail() {
   if (status === "loading" || loading) return null;
   if (!session) return null;
 
-  const inputClass =
-    "w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
-  const labelClass = "block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1";
-
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black px-0 py-0 sm:px-4 sm:py-12">
-      <div className="mx-auto max-w-lg">
-
-        <div className="mb-8 px-5 pt-10 sm:px-0 sm:pt-0">
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Charge detail</h1>
-          <p className="mt-1 text-sm text-zinc-500">{editable ? "Edit or review this entry." : "View-only."}</p>
-        </div>
-
-        {/* Calculated stats */}
-        {(avgSpeed || miPer100Wh) && (
-          <div className="grid grid-cols-3 gap-3 mb-5 px-5 sm:px-0">
-            {avgSpeed && (
-              <div className="rounded-xl bg-white dark:bg-zinc-900 px-4 py-3 shadow-sm ring-1 ring-zinc-100 dark:ring-zinc-800 text-center">
-                <p className="text-xs text-zinc-400 uppercase tracking-wide">Avg speed</p>
-                <p className="mt-1 text-xl font-semibold text-zinc-900 dark:text-zinc-50">{avgSpeed}</p>
-                <p className="text-xs text-zinc-400">mph</p>
-              </div>
-            )}
-            {kwhPer100Mile && (
-              <div className="rounded-xl bg-white dark:bg-zinc-900 px-4 py-3 shadow-sm ring-1 ring-zinc-100 dark:ring-zinc-800 text-center">
-                <p className="text-xs text-zinc-400 uppercase tracking-wide">Efficiency</p>
-                <p className="mt-1 text-xl font-semibold text-zinc-900 dark:text-zinc-50">{kwhPer100Mile}</p>
-                <p className="text-xs text-zinc-400">kWh/100mi</p>
-              </div>
-            )}
-            {miPer100Wh && (
-              <div className="rounded-xl bg-white dark:bg-zinc-900 px-4 py-3 shadow-sm ring-1 ring-zinc-100 dark:ring-zinc-800 text-center">
-                <p className="text-xs text-zinc-400 uppercase tracking-wide">Mi/100Wh</p>
-                <p className="mt-1 text-xl font-semibold text-zinc-900 dark:text-zinc-50">{miPer100Wh}</p>
-                <p className="text-xs text-zinc-400">mi/100Wh</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="space-y-5 rounded-none sm:rounded-2xl bg-white dark:bg-zinc-900 p-5 sm:p-6 shadow-sm sm:ring-1 ring-zinc-100 dark:ring-zinc-800">
-
-          {/* Date / Miles / kWh */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className={labelClass}>Date</label>
-              <input type="date" className={inputClass} value={form.date} disabled={!editable}
-                onChange={(e) => set("date", e.target.value)} />
-            </div>
-            <div>
-              <label className={labelClass}>Miles</label>
-              <input type="number" step="0.1" className={inputClass} disabled={!editable}
-                value={form.miles} onChange={(e) => set("miles", e.target.value)} />
-            </div>
-            <div>
-              <label className={labelClass}>kWh</label>
-              <input type="number" step="0.1" className={inputClass} disabled={!editable}
-                value={form.kwh} onChange={(e) => set("kwh", e.target.value)} />
-            </div>
-          </div>
-
-          {/* Hours / Minutes */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Hours driven</label>
-              <input type="number" step="1" min="0" placeholder="2" className={inputClass} disabled={!editable}
-                value={form.hours} onChange={(e) => set("hours", e.target.value)} />
-            </div>
-            <div>
-              <label className={labelClass}>Minutes driven</label>
-              <input type="number" step="1" min="0" max="59" placeholder="30" className={inputClass} disabled={!editable}
-                value={form.mins} onChange={(e) => set("mins", e.target.value)} />
-            </div>
-          </div>
-
-          {/* Odometer / Total kWh */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Odometer</label>
-              <input type="number" step="0.1" className={inputClass} disabled={!editable}
-                value={form.odo} onChange={(e) => set("odo", e.target.value)} />
-            </div>
-            <div>
-              <label className={labelClass}>Total kWh</label>
-              <input type="number" step="0.1" className={inputClass} disabled={!editable}
-                value={form.total_kwh} onChange={(e) => set("total_kwh", e.target.value)} />
-            </div>
-          </div>
-
-          {editable && (
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="w-full rounded-full bg-zinc-900 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-            >
-              {saving ? "Saving…" : "Save changes"}
-            </button>
-          )}
-        </div>
-
-        <div className="mt-4 text-center px-5 sm:px-0">
-          <a href="/ev" className="text-sm text-zinc-400 hover:text-zinc-600">← Back to EV log</a>
-        </div>
+    <PageShell maxWidth="max-w-lg" compactOnMobile>
+      <div className="mb-8 px-5 pt-10 sm:px-0 sm:pt-0">
+        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Charge detail</h1>
+        <p className="mt-1 text-sm text-zinc-500">{editable ? "Edit or review this entry." : "View-only."}</p>
       </div>
-    </div>
+
+      {(avgSpeed || miPer100Wh) && (
+        <div className="grid grid-cols-3 gap-3 mb-5 px-5 sm:px-0">
+          {avgSpeed && <DerivedStat label="Avg speed" value={avgSpeed} unit="mph" />}
+          {kwhPer100Mile && <DerivedStat label="Efficiency" value={kwhPer100Mile} unit="kWh/100mi" />}
+          {miPer100Wh && <DerivedStat label="Mi/100Wh" value={miPer100Wh} unit="mi/100Wh" />}
+        </div>
+      )}
+
+      <FormCard>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <FormField label="Date" type="date" value={form.date} disabled={!editable} onChange={(e) => set("date", e.target.value)} />
+          <FormField label="Miles" type="number" step="0.1" value={form.miles} disabled={!editable} onChange={(e) => set("miles", e.target.value)} />
+          <FormField label="kWh" type="number" step="0.1" value={form.kwh} disabled={!editable} onChange={(e) => set("kwh", e.target.value)} />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FormField label="Hours driven" type="number" step="1" min="0" placeholder="2" value={form.hours} disabled={!editable} onChange={(e) => set("hours", e.target.value)} />
+          <FormField label="Minutes driven" type="number" step="1" min="0" max="59" placeholder="30" value={form.mins} disabled={!editable} onChange={(e) => set("mins", e.target.value)} />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FormField label="Odometer" type="number" step="0.1" value={form.odo} disabled={!editable} onChange={(e) => set("odo", e.target.value)} />
+          <FormField label="Total kWh" type="number" step="0.1" value={form.total_kwh} disabled={!editable} onChange={(e) => set("total_kwh", e.target.value)} />
+        </div>
+
+        {editable && (
+          <SubmitButton loading={saving} onClick={handleSave}>Save changes</SubmitButton>
+        )}
+      </FormCard>
+
+      <BackLink href="/ev">← Back to EV log</BackLink>
+    </PageShell>
   );
 }
